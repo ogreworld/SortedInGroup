@@ -8,7 +8,7 @@
 
 import UIKit
 
-let textString = ["apple", "banana", "dog", "cat", "fat", "egg"]
+let textString = ["apple", "app", "banana", "dog", "cat", "fat", "egg"]
 
 class DemoTestTableViewController: SortedInGroupTableViewController {
 

@@ -13,8 +13,9 @@ class SortedInGroupTableViewController: UITableViewController {
     var contextList = [String]()
     
     var _resortedList = [String:Array<String>]()
-    var _unSortedList = Array<String>()
     var _keyList = Array<String>()
+    
+    
     
     func initSettings(newContent:[String])
     {
@@ -43,7 +44,6 @@ class SortedInGroupTableViewController: UITableViewController {
             {
                 _resortedList.updateValue([conText], forKey: firstCharactor)
             }
-            _unSortedList.append(conText)
             
         }
         
@@ -73,7 +73,7 @@ class SortedInGroupTableViewController: UITableViewController {
 
     override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        return _resortedList.count
+        return _keyList.count
     }
     
     override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -85,6 +85,14 @@ class SortedInGroupTableViewController: UITableViewController {
         return _resortedList[_keyList[section]]!.count
     }
     
+    override func sectionIndexTitlesForTableView(tableView: UITableView) -> [String]? {
+        return self._keyList
+    }
+    
+    override func tableView(tableView: UITableView, sectionForSectionIndexTitle title: String, atIndex index: Int) -> Int {
+        return self._keyList.indexOf(title)!
+    }
+    
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         
         let cell = UITableViewCell()
@@ -92,13 +100,65 @@ class SortedInGroupTableViewController: UITableViewController {
         let curSection = indexPath.section
         let curRow = indexPath.row
         let curString = _resortedList[_keyList[curSection]]?[curRow]
-        let row = contextList[_unSortedList.indexOf(curString!)!]
+        let row = contextList[contextList.indexOf(curString!)!]
         
         cell.textLabel!.text = row
         
         return cell
     }
-
+    
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        self.tableView.deselectRowAtIndexPath(indexPath, animated: false)
+    }
+    
+    // deal with the editing
+    override func tableView(tableView: UITableView, canEditRowAtIndexPath indexPath: NSIndexPath) -> Bool {
+        return true
+    }
+    
+    override func tableView(tableView: UITableView, editingStyleForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCellEditingStyle {
+        return UITableViewCellEditingStyle.Delete
+    }
+    
+    // add some actions
+    override func tableView(tableView: UITableView, editActionsForRowAtIndexPath indexPath: NSIndexPath) -> [UITableViewRowAction]? {
+        
+        // add a delete button
+        let deleteRowAction = UITableViewRowAction(style: UITableViewRowActionStyle.Destructive, title: "删除", handler: deleteRow)
+        deleteRowAction.backgroundColor = UIColor.redColor()
+        
+        return [deleteRowAction]
+    }
+    
+    func deleteRow(action:UITableViewRowAction, indexPath:NSIndexPath)
+    {
+        // Cancel
+        let cancelAction = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Default, handler: {
+            alertAction in
+            NSLog("Cancel")})
+        
+        // OK
+        let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: {alertAction in
+            
+            let curText = self._resortedList[self._keyList[indexPath.section]]?[indexPath.row]
+            self.contextList.removeAtIndex(self.contextList.indexOf(curText!)!)
+            self._resortedList[self._keyList[indexPath.section]]?.removeAtIndex(indexPath.row)
+            self.tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Automatic)
+            if self._resortedList[self._keyList[indexPath.section]]?.count == 0
+            {
+                self._keyList.removeAtIndex(indexPath.section)
+                self.tableView.reloadData()
+            }
+            
+        })
+        
+        let markAlertView = UIAlertController(title: "Delete", message: "Are you sure to delete it？", preferredStyle: UIAlertControllerStyle.Alert)
+        markAlertView.addAction(cancelAction)
+        markAlertView.addAction(okAction)
+        self.presentViewController(markAlertView, animated: true, completion: nil)
+        
+    }
+    
     /*
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("reuseIdentifier", forIndexPath: indexPath)
